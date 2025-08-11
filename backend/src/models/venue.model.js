@@ -46,6 +46,23 @@ const venueSchema = new mongoose.Schema({
             required: true // Maximum price across all courts
         }
     },
+
+    amenities: {
+        type: [String],
+        default: []
+    },
+
+    rating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+
+    reviewCount: {
+        type: Number,
+        default: 0
+    }
 }, { timestamps: true });
 
 const Venue = mongoose.model("Venue", venueSchema);

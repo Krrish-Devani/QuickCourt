@@ -5,12 +5,14 @@ import { Loader } from "lucide-react"
 import { Toaster } from "react-hot-toast"
 
 import Navbar from "./components/Navbar";
-import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import EmailVerify from "./pages/EmailVerify";
-// import AddVenue from "./pages/AddVenue";
+import Venues from "./pages/Venues";
+import AddVenue from "./pages/AddVenue";
+import VenueDetail from "./pages/VenueDetail";
 
 function App() {
 
@@ -34,7 +36,10 @@ function App() {
 
       <main className="flex-1 overflow-auto">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/venues" element={<Venues />} />
+          <Route path="/venue/:venueId" element={<VenueDetail />} />
+          <Route path="/add-venue" element={ authUser ? <AddVenue /> : <Navigate to={"/login"} />} />
           <Route path="/signup" element={ !authUser ? <SignUp /> : <Navigate to={"/"} />} />
           <Route path="/login" element={ !authUser ? <Login /> : <Navigate to={"/"} />} />
           <Route path="/verify-email" element={<EmailVerify />} />

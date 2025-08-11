@@ -1,3 +1,549 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Slide in from left animation */
+@keyframes slide-in-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-in.slide-in-from-left {
+  animation: slide-in-from-left 0.4s ease-out;
+}
+
+/* Sport Category Cards */
+.sport-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  backdrop-filter: blur(10px);
+}
+
+.sport-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.sport-card.selected {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.6);
+  transform: translateY(-2px);
+}
+
+.sport-card-image {
+  transition: transform 0.3s ease;
+}
+
+.sport-card:hover .sport-card-image {
+  transform: scale(1.15);
+}
+
+.sport-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.sport-card:hover .sport-card-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.sport-card.selected .sport-card-overlay {
+  background: rgba(34, 197, 94, 0.7);
+}
+
+/* Ripple effect */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+/* Zoom in animation for selected indicator */
+@keyframes zoom-in-75 {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-in.zoom-in-75 {
+  animation: zoom-in-75 0.3s ease-out;
+}
+
+/* Responsive adjustments for sport cards */
+@media (max-width: 640px) {
+  .sport-card {
+    min-height: 80px;
+  }
+  
+  .sport-card:hover {
+    transform: translateY(-2px) scale(1.01);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .sport-card {
+    min-height: 100px;
+  }
+}
+
+@media (min-width: 769px) {
+  .sport-card {
+    min-height: 120px;
+  }
+}
+
+/* Glassmorphism effect for cards */
+.sport-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  z-index: 1;
+}
+
+/* Filter Animation Styles */
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-top 0.3s ease-out;
+}
+
+/* Custom checkbox styles */
+.form-checkbox {
+  appearance: none;
+  background-color: #fff;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  width: 1rem;
+  height: 1rem;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.form-checkbox:checked {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.form-checkbox:checked::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.form-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* Search input loading animation */
+.search-loading {
+  position: relative;
+}
+
+.search-loading::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-top: 2px solid #059669;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* React DatePicker Styles - Full Width & Responsive */
+.react-datepicker {
+  border: none !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.react-datepicker__month-container {
+  width: 100% !important;
+}
+
+.react-datepicker__month {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.react-datepicker__week {
+  display: flex !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.react-datepicker__day-names {
+  display: flex !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.react-datepicker__day-name {
+  color: white !important;
+  font-weight: 500 !important;
+  flex: 1 !important;
+  text-align: center !important;
+  margin: 0 2px !important;
+  font-size: 0.875rem !important;
+}
+
+.react-datepicker__day {
+  color: #374151 !important;
+  border-radius: 8px !important;
+  margin: 2px !important;
+  flex: 1 !important;
+  text-align: center !important;
+  height: 2.5rem !important;
+  line-height: 2.5rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-datepicker__header {
+  background-color: #16a34a !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  width: 100% !important;
+  padding: 1rem !important;
+}
+
+.react-datepicker__current-month {
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .react-datepicker__day {
+    height: 2rem !important;
+    line-height: 2rem !important;
+    font-size: 0.75rem !important;
+    margin: 1px !important;
+  }
+  
+  .react-datepicker__day-name {
+    font-size: 0.75rem !important;
+    margin: 0 1px !important;
+  }
+  
+  .react-datepicker__current-month {
+    font-size: 1rem !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .react-datepicker__day {
+    height: 2.25rem !important;
+    line-height: 2.25rem !important;
+    font-size: 0.8125rem !important;
+  }
+  
+  .react-datepicker__day-name {
+    font-size: 0.8125rem !important;
+  }
+}
+
+.react-datepicker__day:hover {
+  background-color: #dcfce7 !important;
+  color: #16a34a !important;
+  transform: scale(1.05) !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: #16a34a !important;
+  color: white !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3) !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #16a34a !important;
+  color: white !important;
+}
+
+.react-datepicker__day--disabled {
+  color: #d1d5db !important;
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+  transform: none !important;
+}
+
+.react-datepicker__navigation {
+  top: 12px !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  border-radius: 50% !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.react-datepicker__navigation:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.react-datepicker__navigation--previous {
+  border-right-color: white !important;
+  left: 1rem !important;
+}
+
+.react-datepicker__navigation--next {
+  border-left-color: white !important;
+  right: 1rem !important;
+}
+
+/* Time Slot Grid Responsive Styles */
+.time-slots-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.time-slots-grid {
+  display: grid !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 0.75rem !important;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure buttons fill their grid cells completely */
+.time-slot-button {
+  width: 100% !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 640px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  
+  .time-slot-button {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-height: 4rem !important;
+    width: 100% !important;
+  }
+}
+
+/* Small tablet: 3 columns */
+@media (min-width: 641px) and (max-width: 768px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.625rem !important;
+  }
+  
+  .time-slot-button {
+    padding: 0.875rem 0.75rem !important;
+    font-size: 0.8125rem !important;
+    min-height: 4rem !important;
+    width: 100% !important;
+  }
+}
+
+/* Tablet: 4 columns */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.625rem !important;
+  }
+  
+  .time-slot-button {
+    padding: 0.875rem 0.75rem !important;
+    font-size: 0.8125rem !important;
+    min-height: 4rem !important;
+    width: 100% !important;
+  }
+}
+
+/* Desktop: 5 columns */
+@media (min-width: 1025px) and (max-width: 1279px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  
+  .time-slot-button {
+    padding: 1rem !important;
+    font-size: 0.875rem !important;
+    min-height: 4.5rem !important;
+    width: 100% !important;
+  }
+}
+
+/* Large Desktop: 6 columns */
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  
+  .time-slot-button {
+    padding: 1rem !important;
+    font-size: 0.875rem !important;
+    min-height: 4.5rem !important;
+    width: 100% !important;
+  }
+}
+
+/* Extra Large Desktop: 7 columns */
+@media (min-width: 1536px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 1rem !important;
+  }
+  
+  .time-slot-button {
+    padding: 1.25rem !important;
+    font-size: 0.875rem !important;
+    min-height: 5rem !important;
+    width: 100% !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #16a34a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #15803d;
+}

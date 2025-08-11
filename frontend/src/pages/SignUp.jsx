@@ -6,6 +6,7 @@ import sportPhoto from '../assets/sports-tools.jpg';
 
 const SignUp = () => {
   const [isSwapped, setIsSwapped] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -70,6 +71,11 @@ const SignUp = () => {
     // Trigger swap animation
     setIsSwapped(true);
 
+    // Show loader after animation starts
+    setTimeout(() => {
+      setShowLoader(true);
+    }, 300);
+
     try {
       await signup({
         fullName: formData.fullName,
@@ -81,6 +87,7 @@ const SignUp = () => {
       navigate('/verify-email');
     } catch (error) {
       setIsSwapped(false); // Reset animation on error
+      setShowLoader(false); // Hide loader on error
       console.error('Signup error:', error);
     }
   };
@@ -114,8 +121,9 @@ const SignUp = () => {
           >
             <div className="w-full max-w-xs my-auto bg-white/90 lg:bg-white rounded-3xl lg:rounded-none p-6 sm:p-8">
               <div className="text-center mb-6">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-green-600 tracking-tight">
-                  QUICKCOURT
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  <span className="text-green-600">QUICK</span>
+                  <span className="text-black">COURT</span>
                 </h1>
                 <p className="text-base sm:text-lg font-medium text-gray-500 mt-1">
                   Create your account
@@ -235,6 +243,17 @@ const SignUp = () => {
           </div>
         </div>
       </div>
+
+      {/* Loader Overlay */}
+      {showLoader && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Creating Your Account</h3>
+            <p className="text-gray-600">Please wait while we set up your profile...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
