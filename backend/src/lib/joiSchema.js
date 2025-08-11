@@ -14,6 +14,7 @@ export const joiLoginSchema = joi.object({
 
 export const joiBookingSchema = joi.object({
     venueId: joi.string().required(),
+    sport: joi.string().required(),
     date: joi.date().required(),
     startTime: joi.string().pattern(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/).required(),
     endTime: joi.string().pattern(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/).required(),

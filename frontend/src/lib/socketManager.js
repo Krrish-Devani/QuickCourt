@@ -227,39 +227,42 @@ class SocketManager {
   /**
    * Emit slot selection events
    */
-  emitSlotSelection(venueId, date, timeSlots) {
+  emitSlotSelection(venueId, date, timeSlots, sport = null) {
     if (!this.socket || !this.isConnected) return;
 
     this.socket.emit('slot_selecting', {
       venueId,
       date: date.toISOString().split('T')[0],
-      timeSlots
+      timeSlots,
+      sport
     });
   }
 
   /**
    * Emit slot deselection events
    */
-  emitSlotDeselection(venueId, date, timeSlots) {
+  emitSlotDeselection(venueId, date, timeSlots, sport = null) {
     if (!this.socket || !this.isConnected) return;
 
     this.socket.emit('slot_deselecting', {
       venueId,
       date: date.toISOString().split('T')[0],
-      timeSlots
+      timeSlots,
+      sport
     });
   }
 
   /**
    * Emit booking initiated event
    */
-  emitBookingInitiated(venueId, date, timeSlots) {
+  emitBookingInitiated(venueId, date, timeSlots, sport = null) {
     if (!this.socket || !this.isConnected) return;
 
     this.socket.emit('booking_initiated', {
       venueId,
       date: date.toISOString().split('T')[0],
-      timeSlots
+      timeSlots,
+      sport
     });
   }
 
@@ -290,12 +293,12 @@ class SocketManager {
     if (!targetVenueId) return;
 
     try {
-      const { getVenueAvailability, selectedDate } = useBookingStore.getState();
+      const { getVenueAvailability, selectedDate, selectedSport } = useBookingStore.getState();
       const targetDate = date || selectedDate;
       
       if (targetDate) {
-        console.log('🔄 Refreshing venue availability for:', targetVenueId, targetDate.toISOString().split('T')[0]);
-        await getVenueAvailability(targetVenueId, targetDate);
+        console.log('🔄 Refreshing venue availability for:', targetVenueId, targetDate.toISOString().split('T')[0], selectedSport ? `sport: ${selectedSport}` : 'all sports');
+        await getVenueAvailability(targetVenueId, targetDate, selectedSport);
       }
     } catch (error) {
       console.error('Error refreshing venue availability:', error);

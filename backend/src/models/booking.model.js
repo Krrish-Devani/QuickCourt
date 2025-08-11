@@ -22,6 +22,19 @@ const bookingSchema = new mongoose.Schema({
     index: true
   },
   
+  // Selected sport for this booking
+  sport: {
+    type: String,
+    required: true,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return v && v.length > 0;
+      },
+      message: 'Sport is required for booking'
+    }
+  },
+  
   // Date of the booking (stored as date only, no time)
   date: {
     type: Date,
@@ -97,16 +110,16 @@ const bookingSchema = new mongoose.Schema({
   timestamps: true // Automatically adds createdAt and updatedAt
 });
 
-// Compound index for efficient queries by venue, date, and time
-bookingSchema.index({ venueId: 1, date: 1, startTime: 1 });
-bookingSchema.index({ venueId: 1, date: 1, endTime: 1 });
+// Compound index for efficient queries by venue, date, sport, and time
+bookingSchema.index({ venueId: 1, date: 1, sport: 1, startTime: 1 });
+bookingSchema.index({ venueId: 1, date: 1, sport: 1, endTime: 1 });
 
 // Compound index for user's bookings
 bookingSchema.index({ userId: 1, date: 1 });
 
-// Static method to check if a time slot is available
-bookingSchema.statics.isSlotAvailable = async function(venueId, date, startTime, endTime) {
-  const conflictingBooking = await this.findOne({
+// Static method to check if a time slot is available for a specific sport
+bookingSchema.statics.isSlotAvailable = async function(venueId, date, sport, startTime, endTime) {
+  const filter = {
     venueId,
     date: new Date(date),
     status: { $ne: 'cancelled' },
@@ -118,20 +131,34 @@ bookingSchema.statics.isSlotAvailable = async function(venueId, date, startTime,
       // New booking encompasses existing booking
       { startTime: { $gte: startTime }, endTime: { $lte: endTime } }
     ]
-  });
+  };
+  
+  // Add case-insensitive sport filter if provided
+  if (sport) {
+    filter.sport = { $regex: new RegExp(`^${sport}$`, 'i') };
+  }
+  
+  const conflictingBooking = await this.findOne(filter);
   
   return !conflictingBooking;
 };
 
-// Static method to get all bookings for a venue on a specific date
-bookingSchema.statics.getVenueBookingsForDate = async function(venueId, date) {
-  return await this.find({
+// Static method to get all bookings for a venue on a specific date for a specific sport
+bookingSchema.statics.getVenueBookingsForDate = async function(venueId, date, sport = null) {
+  const filter = {
     venueId,
     date: new Date(date),
     status: { $ne: 'cancelled' }
-  })
-  .populate('userId', 'fullName email')
-  .sort({ startTime: 1 });
+  };
+  
+  if (sport) {
+    // Case-insensitive sport matching
+    filter.sport = { $regex: new RegExp(`^${sport}$`, 'i') };
+  }
+  
+  return await this.find(filter)
+    .populate('userId', 'fullName email')
+    .sort({ startTime: 1 });
 };
 
 // Instance method to calculate duration

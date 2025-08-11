@@ -82,12 +82,13 @@ export const initializeSocket = (server) => {
      * When a user is selecting time slots, show to others in real-time
      */
     socket.on('slot_selecting', (data) => {
-      const { venueId, date, timeSlots } = data;
+      const { venueId, date, timeSlots, sport } = data;
       
       // Broadcast to all users in the venue room except the sender
       socket.to(`venue_${venueId}`).emit('slot_being_selected', {
         venueId,
         date,
+        sport,
         timeSlots,
         user: {
           id: socket.userId,
@@ -101,11 +102,12 @@ export const initializeSocket = (server) => {
      * Handle time slot deselection
      */
     socket.on('slot_deselecting', (data) => {
-      const { venueId, date, timeSlots } = data;
+      const { venueId, date, timeSlots, sport } = data;
       
       socket.to(`venue_${venueId}`).emit('slot_being_deselected', {
         venueId,
         date,
+        sport,
         timeSlots,
         user: {
           id: socket.userId,
@@ -134,17 +136,18 @@ export const initializeSocket = (server) => {
      * When a user starts the booking process
      */
     socket.on('booking_initiated', (data) => {
-      const { venueId, date, timeSlots } = data;
+      const { venueId, date, timeSlots, sport } = data;
       
       socket.to(`venue_${venueId}`).emit('booking_in_progress', {
         venueId,
         date,
+        sport,
         timeSlots,
         user: {
           id: socket.userId,
           name: socket.userFullName
         },
-        message: `${socket.userFullName} is booking these slots...`
+        message: `${socket.userFullName} is booking these slots for ${sport}...`
       });
     });
 
@@ -191,11 +194,12 @@ export const emitBookingConfirmed = (venueId, bookingData) => {
         date: bookingData.date,
         startTime: bookingData.startTime,
         endTime: bookingData.endTime,
+        sport: bookingData.sport,
         userId: bookingData.userId,
         venueId: bookingData.venueId
       },
       date: bookingData.date.toISOString().split('T')[0],
-      message: 'New booking confirmed - time slots now unavailable'
+      message: `New ${bookingData.sport} booking confirmed - time slots now unavailable`
     };
     
     io.to(`venue_${venueId}`).emit('booking_confirmed', eventData);

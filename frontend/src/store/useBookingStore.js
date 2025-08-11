@@ -11,6 +11,7 @@ export const useBookingStore = create((set, get) => ({
   // State
   currentVenue: null,
   selectedDate: new Date(),
+  selectedSport: null,
   timeSlots: [],
   selectedSlots: [],
   totalPrice: 0,
@@ -24,17 +25,20 @@ export const useBookingStore = create((set, get) => ({
   // Actions
 
   /**
-   * Get venue availability for a specific date
+   * Get venue availability for a specific date and sport
    */
-  getVenueAvailability: async (venueId, date) => {
+  getVenueAvailability: async (venueId, date, sport = null) => {
     set({ isLoading: true });
     try {
       const dateString = date.toISOString().split('T')[0];
-      console.log('🔍 Fetching venue availability for:', venueId, dateString);
+      console.log('🔍 Fetching venue availability for:', venueId, dateString, sport ? `sport: ${sport}` : 'all sports');
       
-      const response = await axiosInstance.get(
-        `/bookings/venue/${venueId}/availability?date=${dateString}`
-      );
+      let url = `/bookings/venue/${venueId}/availability?date=${dateString}`;
+      if (sport) {
+        url += `&sport=${encodeURIComponent(sport)}`;
+      }
+      
+      const response = await axiosInstance.get(url);
       
       const { venue, timeSlots } = response.data;
       
@@ -47,7 +51,8 @@ export const useBookingStore = create((set, get) => ({
       console.log('📊 Slot breakdown:', {
         total: timeSlots?.length,
         available: timeSlots?.filter(s => s.available).length,
-        booked: timeSlots?.filter(s => !s.available).length
+        booked: timeSlots?.filter(s => !s.available).length,
+        sport: sport || 'all sports'
       });
 
       set({
@@ -123,10 +128,14 @@ export const useBookingStore = create((set, get) => ({
   createBooking: async (bookingData) => {
     set({ isBooking: true });
     try {
-      const { selectedSlots, currentVenue, selectedDate } = get();
+      const { selectedSlots, currentVenue, selectedDate, selectedSport } = get();
       
       if (selectedSlots.length === 0) {
         throw new Error('Please select at least one time slot');
+      }
+
+      if (!selectedSport) {
+        throw new Error('Please select a sport');
       }
 
       if (!bookingData.contactPhone) {
@@ -139,6 +148,7 @@ export const useBookingStore = create((set, get) => ({
 
       const booking = {
         venueId: currentVenue._id,
+        sport: selectedSport,
         date: selectedDate.toISOString().split('T')[0],
         startTime,
         endTime,
@@ -147,10 +157,15 @@ export const useBookingStore = create((set, get) => ({
       };
 
       console.log('📅 Creating booking:', booking);
+      console.log('🎯 Selected sport debug:', {
+        selectedSport,
+        venueId: currentVenue._id,
+        venueSports: currentVenue.sports
+      });
 
       const response = await axiosInstance.post('/bookings/create', booking);
       
-      toast.success('Booking created successfully!');
+      toast.success(`${selectedSport} booking created successfully!`);
       
       // Clear selection after successful booking
       set({
@@ -161,7 +176,7 @@ export const useBookingStore = create((set, get) => ({
 
       // Refresh availability immediately to show the new booking
       console.log('🔄 Refreshing availability after booking creation...');
-      await get().getVenueAvailability(currentVenue._id, selectedDate);
+      await get().getVenueAvailability(currentVenue._id, selectedDate, selectedSport);
 
       return response.data;
     } catch (error) {
@@ -227,6 +242,23 @@ export const useBookingStore = create((set, get) => ({
   },
 
   /**
+   * Set selected sport
+   */
+  setSelectedSport: (sport) => {
+    const { currentVenue, selectedDate } = get();
+    set({ 
+      selectedSport: sport,
+      selectedSlots: [],
+      totalPrice: 0
+    });
+    
+    // Refresh availability for the selected sport
+    if (currentVenue && selectedDate) {
+      get().getVenueAvailability(currentVenue._id, selectedDate, sport);
+    }
+  },
+
+  /**
    * Update time slots (for real-time updates)
    */
   updateTimeSlots: (newTimeSlots) => {
@@ -263,6 +295,7 @@ export const useBookingStore = create((set, get) => ({
     set({
       currentVenue: null,
       selectedDate: new Date(),
+      selectedSport: null,
       timeSlots: [],
       selectedSlots: [],
       totalPrice: 0,

@@ -39,6 +39,7 @@ const VenueDetail = () => {
   const {
     currentVenue,
     selectedDate,
+    selectedSport,
     timeSlots,
     selectedSlots,
     totalPrice,
@@ -50,6 +51,7 @@ const VenueDetail = () => {
     clearSelection,
     createBooking,
     setSelectedDate,
+    setSelectedSport,
     resetBookingState
   } = useBookingStore();
 
@@ -91,6 +93,13 @@ const VenueDetail = () => {
     }
   }, [selectedDate]);
 
+  // Load venue data when sport selection changes
+  useEffect(() => {
+    if (venueId && selectedDate && selectedSport) {
+      loadVenueData();
+    }
+  }, [selectedSport]);
+
   // Setup real-time slot selection updates
   useEffect(() => {
     if (isSocketConnected && selectedSlots.length > 0) {
@@ -100,7 +109,7 @@ const VenueDetail = () => {
       }
       
       typingTimeoutRef.current = setTimeout(() => {
-        socketManager.emitSlotSelection(venueId, selectedDate, selectedSlots);
+        socketManager.emitSlotSelection(venueId, selectedDate, selectedSlots, selectedSport);
       }, 500);
     }
 
@@ -116,7 +125,7 @@ const VenueDetail = () => {
    */
   const loadVenueData = async () => {
     try {
-      await getVenueAvailability(venueId, selectedDate);
+      await getVenueAvailability(venueId, selectedDate, selectedSport);
     } catch (error) {
       console.error('Failed to load venue data:', error);
       toast.error('Failed to load venue information');
@@ -176,6 +185,11 @@ const VenueDetail = () => {
       return;
     }
 
+    if (!selectedSport) {
+      toast.error('Please select a sport');
+      return;
+    }
+
     if (!contactPhone.trim()) {
       toast.error('Please provide your contact phone number');
       return;
@@ -183,7 +197,7 @@ const VenueDetail = () => {
 
     try {
       // Emit booking initiated event
-      socketManager.emitBookingInitiated(venueId, selectedDate, selectedSlots);
+      socketManager.emitBookingInitiated(venueId, selectedDate, selectedSlots, selectedSport);
 
       // Create booking
       await createBooking({
@@ -316,19 +330,29 @@ const VenueDetail = () => {
                   </div>
                 </div>
 
-                {/* Sports */}
+                {/* Sports Selection */}
                 <div className="mb-4">
                   <h3 className="font-semibold text-gray-900 mb-2">Available Sports</h3>
                   <div className="flex flex-wrap gap-2">
                     {currentVenue?.sports?.map((sport, index) => (
-                      <span 
+                      <button
                         key={index}
-                        className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"
+                        onClick={() => setSelectedSport(sport)}
+                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                          selectedSport === sport
+                            ? 'bg-green-600 text-white'
+                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                        }`}
                       >
                         {sport}
-                      </span>
+                      </button>
                     ))}
                   </div>
+                  {selectedSport && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Selected sport: <span className="font-medium text-green-600">{selectedSport}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -369,7 +393,19 @@ const VenueDetail = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 w-full">
                 <div className="flex-1">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Available Time Slots</h2>
-                  <p className="text-sm text-gray-600">Select consecutive time slots for your booking</p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-600">Select consecutive time slots for your booking</p>
+                    {!selectedSport && (
+                      <p className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-md inline-block">
+                        💡 Select a sport above to see sport-specific availability
+                      </p>
+                    )}
+                    {selectedSport && (
+                      <p className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-md inline-block">
+                        ⚽ Showing availability for {selectedSport}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm flex-shrink-0">
                   <div className="flex items-center gap-2">
@@ -775,7 +811,7 @@ const VenueDetail = () => {
                 {!showBookingForm ? (
                   <button
                     onClick={() => setShowBookingForm(true)}
-                    disabled={!authUser}
+                    disabled={!authUser || selectedSlots.length === 0 || !selectedSport}
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <CheckCircle className="w-5 h-5" />

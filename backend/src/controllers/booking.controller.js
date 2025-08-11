@@ -9,13 +9,13 @@ import User from '../models/user.model.js';
 import { emitBookingConfirmed, emitSlotAvailabilityUpdate } from '../socket.js';
 
 /**
- * Get venue details with availability for a specific date
+ * Get venue details with availability for a specific date and sport
  * GET /api/bookings/venue/:venueId/availability
  */
 export const getVenueAvailability = async (req, res) => {
   try {
     const { venueId } = req.params;
-    const { date } = req.query;
+    const { date, sport } = req.query;
 
     // Validate venue exists
     const venue = await Venue.findById(venueId);
@@ -23,11 +23,19 @@ export const getVenueAvailability = async (req, res) => {
       return res.status(404).json({ message: 'Venue not found' });
     }
 
+    // If sport is specified, validate it's available at this venue (case-insensitive)
+    if (sport && !venue.sports.some(s => s.toLowerCase().trim() === sport.toLowerCase().trim())) {
+      return res.status(400).json({ 
+        message: `Sport '${sport}' is not available at this venue`,
+        availableSports: venue.sports 
+      });
+    }
+
     // Generate time slots (9 AM to 10 PM in 1-hour intervals)
     const timeSlots = generateTimeSlots();
     
-    // Get existing bookings for the date
-    const bookings = await Booking.getVenueBookingsForDate(venueId, date);
+    // Get existing bookings for the date (filter by sport if specified)
+    const bookings = await Booking.getVenueBookingsForDate(venueId, date, sport);
     
     // Mark booked slots as unavailable
     const slotsWithAvailability = timeSlots.map(slot => {
@@ -40,13 +48,16 @@ export const getVenueAvailability = async (req, res) => {
         available: !isBooked,
         bookedBy: isBooked ? bookings.find(b => 
           isTimeSlotOverlapping(slot.start, slot.end, b.startTime, b.endTime)
-        )?.userId : null
+        )?.userId : null,
+        sport: sport || null // Include sport in response
       };
     });
 
     res.json({
       venue,
       date,
+      sport: sport || null,
+      availableSports: venue.sports,
       timeSlots: slotsWithAvailability,
       totalSlots: timeSlots.length,
       availableSlots: slotsWithAvailability.filter(slot => slot.available).length,
@@ -68,13 +79,13 @@ export const getVenueAvailability = async (req, res) => {
  */
 export const createBooking = async (req, res) => {
   try {
-    const { venueId, date, startTime, endTime, contactPhone, notes } = req.body;
+    const { venueId, sport, date, startTime, endTime, contactPhone, notes } = req.body;
     const userId = req.user._id;
 
     // Validate required fields
-    if (!venueId || !date || !startTime || !endTime || !contactPhone) {
+    if (!venueId || !sport || !date || !startTime || !endTime || !contactPhone) {
       return res.status(400).json({ 
-        message: 'Missing required fields: venueId, date, startTime, endTime, contactPhone' 
+        message: 'Missing required fields: venueId, sport, date, startTime, endTime, contactPhone' 
       });
     }
 
@@ -82,6 +93,36 @@ export const createBooking = async (req, res) => {
     const venue = await Venue.findById(venueId);
     if (!venue) {
       return res.status(404).json({ message: 'Venue not found' });
+    }
+
+    // Validate sport is available at this venue (case-insensitive)
+    console.log('🔍 Sport validation:', {
+      requestedSport: sport,
+      requestedSportType: typeof sport,
+      requestedSportLength: sport?.length,
+      venueSports: venue.sports,
+      venueSportsTypes: venue.sports.map(s => typeof s),
+      includes: venue.sports.includes(sport),
+      // Check case-insensitive match
+      caseInsensitiveMatch: venue.sports.some(s => s.toLowerCase() === sport.toLowerCase()),
+      // Check trimmed match
+      trimmedMatch: venue.sports.some(s => s.trim() === sport.trim())
+    });
+    
+    // Check for exact match first, then case-insensitive match
+    const sportExists = venue.sports.includes(sport) || 
+                       venue.sports.some(s => s.toLowerCase().trim() === sport.toLowerCase().trim());
+    
+    if (!sportExists) {
+      return res.status(400).json({ 
+        message: `Sport '${sport}' is not available at this venue`,
+        availableSports: venue.sports,
+        debug: {
+          requestedSport: sport,
+          exactMatch: venue.sports.includes(sport),
+          caseInsensitiveMatches: venue.sports.filter(s => s.toLowerCase() === sport.toLowerCase())
+        }
+      });
     }
 
     // Validate time format and logic
@@ -112,11 +153,11 @@ export const createBooking = async (req, res) => {
 
     const totalPrice = hourlyRate * duration;
 
-    // Check slot availability
-    const isAvailable = await Booking.isSlotAvailable(venueId, date, startTime, endTime);
+    // Check slot availability for the specific sport
+    const isAvailable = await Booking.isSlotAvailable(venueId, date, sport, startTime, endTime);
     if (!isAvailable) {
       return res.status(409).json({ 
-        message: 'Selected time slot is not available' 
+        message: `Selected time slot is not available for ${sport}` 
       });
     }
 
@@ -135,6 +176,7 @@ export const createBooking = async (req, res) => {
     const booking = new Booking({
       venueId,
       userId,
+      sport,
       date: bookingDate,
       startTime,
       endTime,
@@ -158,9 +200,11 @@ export const createBooking = async (req, res) => {
     console.log('📡 Emitting booking confirmation to venue room:', venueId);
     console.log('📡 Booking data being sent:', {
       venueId,
+      sport,
       booking: {
         _id: booking._id,
         date: booking.date,
+        sport: booking.sport,
         startTime: booking.startTime,
         endTime: booking.endTime,
         userId: booking.userId
@@ -168,16 +212,17 @@ export const createBooking = async (req, res) => {
     });
     emitBookingConfirmed(venueId, booking);
 
-    // Get updated availability for the date and emit update
-    const updatedSlots = await getAvailableSlotsForDate(venueId, date);
-    console.log('📡 Emitting slot availability update:', updatedSlots.length, 'available slots for date:', date);
-    emitSlotAvailabilityUpdate(venueId, date, updatedSlots);
+    // Get updated availability for the date and sport and emit update
+    const updatedSlots = await getAvailableSlotsForDate(venueId, date, sport);
+    console.log('📡 Emitting slot availability update:', updatedSlots.length, 'available slots for date:', date, 'sport:', sport);
+    emitSlotAvailabilityUpdate(venueId, date, updatedSlots, sport);
 
     res.status(201).json({
       message: 'Booking created successfully',
       booking,
       totalPrice,
-      duration
+      duration,
+      sport
     });
 
   } catch (error) {
@@ -398,11 +443,11 @@ function calculateDuration(startTime, endTime) {
 }
 
 /**
- * Get available slots for a specific date
+ * Get available slots for a specific date and sport
  */
-async function getAvailableSlotsForDate(venueId, date) {
+async function getAvailableSlotsForDate(venueId, date, sport = null) {
   const timeSlots = generateTimeSlots();
-  const bookings = await Booking.getVenueBookingsForDate(venueId, date);
+  const bookings = await Booking.getVenueBookingsForDate(venueId, date, sport);
   
   return timeSlots.filter(slot => {
     return !bookings.some(booking => 
