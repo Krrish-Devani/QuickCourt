@@ -1,74 +1,84 @@
-# QuickCourt - Real-Time Venue Booking System
+# QuickCourt 🏟️
 
-A complete MERN stack application for booking sports venues with real-time updates using Socket.IO.
+A modern venue booking platform that allows users to discover, book, and manage sports venues with real-time availability and secure payment processing.
 
 ## 🚀 Features
 
-### ✅ **Real-Time Booking System**
-- **Live Slot Updates**: When someone books a slot, it becomes instantly unavailable for all users
-- **Real-Time Notifications**: Get notified when slots become available/unavailable
-- **Live User Activity**: See when others are selecting slots or booking
-- **Connection Status**: Real-time connection indicator
+- **Real-time Venue Discovery** - Browse and search venues with advanced filtering
+- **Sport-specific Booking** - Book slots for specific sports with availability tracking
+- **Secure Payment Gateway** - Integrated Razorpay payment processing
+- **Real-time Updates** - Live slot availability using Socket.IO
+- **User Authentication** - Secure JWT-based authentication system
+- **Responsive Design** - Mobile-first responsive interface
+- **Admin Dashboard** - Venue management and booking analytics
 
-### ✅ **Venue Management**
-- **Detailed Venue Pages**: Complete venue information with images and amenities
-- **Time Slot Grid**: Visual 1-hour slots from 9 AM to 10 PM
-- **Dynamic Pricing**: Price calculation based on duration and hourly rates
-- **Date Selection**: Book up to 30 days in advance
-
-### ✅ **Booking Features**
-- **Consecutive Slot Selection**: Select multiple consecutive hours
-- **Availability Validation**: Real-time slot availability checking
-- **Booking Confirmation**: Instant booking with contact details
-- **Booking History**: View and manage your bookings
-
-### ✅ **Authentication & Security**
-- **JWT Authentication**: Secure login/signup system
-- **Email Verification**: OTP-based email verification
-- **Protected Routes**: Login required for booking
-- **Real-Time Auth**: Socket authentication for secure real-time features
-
-### ✅ **User Experience**
-- **Responsive Design**: Works on all devices
-- **Loading States**: Smooth loading animations
-- **Error Handling**: Comprehensive error management
-- **Toast Notifications**: Real-time feedback for all actions
-
-## 🛠️ Technology Stack
-
-### **Backend**
-- **Node.js + Express**: RESTful API server
-- **MongoDB + Mongoose**: Database with optimized schemas
-- **Socket.IO**: Real-time bidirectional communication
-- **JWT**: Authentication and authorization
-- **Joi**: Input validation
-- **Cloudinary**: Image storage and management
-- **Nodemailer**: Email services
+## 🛠️ Tech Stack
 
 ### **Frontend**
-- **React 18**: Modern UI with hooks
-- **Zustand**: Lightweight state management
-- **Socket.IO Client**: Real-time client connection
-- **React Router**: Client-side routing
-- **React DatePicker**: Date selection component
-- **Tailwind CSS**: Utility-first styling
-- **Lucide React**: Beautiful icons
-- **React Hot Toast**: Notification system
+- **Framework:** React 18.x with Vite
+- **Language:** JavaScript (ES6+)
+- **Styling:** Tailwind CSS
+- **State Management:** Zustand
+- **Routing:** React Router DOM
+- **Date Handling:** React DatePicker
+- **Icons:** Lucide React
+- **HTTP Client:** Axios
+- **Notifications:** React Hot Toast
+- **Payment:** Razorpay SDK
 
-## 📦 Installation & Setup
+### **Backend**
+- **Runtime:** Node.js
+- **Framework:** Express.js
+- **Language:** JavaScript (ES6+ with modules)
+- **Database:** MongoDB with Mongoose ODM
+- **Authentication:** JWT (JSON Web Tokens)
+- **Password Hashing:** bcryptjs
+- **File Upload:** Multer
+- **Validation:** Joi
+- **Payment Processing:** Razorpay
+- **Real-time Communication:** Socket.IO
+- **Environment Variables:** dotenv
+- **CORS:** cors middleware
 
-### **Prerequisites**
-- Node.js (v18+ recommended)
-- MongoDB (local or Atlas)
-- npm or yarn
+### **Database**
+- **Primary Database:** MongoDB Atlas
+- **ODM:** Mongoose
+- **Schema Design:** 
+  - Users, Venues, Bookings, Payments collections
+  - Referential integrity with ObjectId references
+  - Compound indexes for optimized queries
 
-### **1. Clone Repository**
+### **Development Tools**
+- **Package Manager:** npm
+- **Version Control:** Git
+- **Development Server:** Vite (Frontend), Nodemon (Backend)
+- **API Testing:** Built-in debugging and logging
+
+### **Deployment & DevOps**
+- **Cloud Database:** MongoDB Atlas
+- **Payment Gateway:** Razorpay (Test/Live modes)
+- **Real-time:** Socket.IO with scaling capabilities
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (v16.0.0 or higher)
+- **npm** (v7.0.0 or higher)
+- **Git**
+- **MongoDB Atlas account** (or local MongoDB)
+- **Razorpay account** (for payment processing)
+
+## 🚀 Installation & Setup
+
+### 1. Clone the Repository
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/QuickCourt.git
 cd QuickCourt
 ```
 
-### **2. Backend Setup**
+### 2. Backend Setup
 
 ```bash
 # Navigate to backend directory
@@ -77,258 +87,177 @@ cd backend
 # Install dependencies
 npm install
 
-# Create environment variables
+# Create environment file
 cp .env.example .env
-
-# Edit .env file with your configurations:
-# MONGO_URI=mongodb://localhost:27017/quickcourt
-# JWT_SECRET=your-jwt-secret
-# CLOUDINARY_CLOUD_NAME=your-cloudinary-name
-# CLOUDINARY_API_KEY=your-cloudinary-key
-# CLOUDINARY_API_SECRET=your-cloudinary-secret
-# EMAIL_USER=your-email@gmail.com
-# EMAIL_PASS=your-app-password
-
-# Start the server
-node src/index.js
 ```
 
-### **3. Frontend Setup**
+#### Backend Environment Variables
+
+Edit the `.env` file with your configurations:
+
+```env
+# Server Configuration
+PORT=5001
+NODE_ENV=development
+
+# Database
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quickcourt
+
+# JWT Configuration
+JWT_SECRET=your_super_secret_jwt_key_here
+JWT_EXPIRES_IN=7d
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_secret_key
+
+# CORS Configuration
+CLIENT_URL=http://localhost:5173
+
+# Socket.IO Configuration
+SOCKET_CORS_ORIGIN=http://localhost:5173
+```
+
+#### Start Backend Server
 
 ```bash
-# Navigate to frontend directory
-cd ../frontend
+# Development mode with auto-restart
+npm run dev
+
+# Or production mode
+npm start
+```
+
+The backend server will start on `http://localhost:5001`
+
+### 3. Frontend Setup
+
+```bash
+# Navigate to frontend directory (from project root)
+cd frontend
 
 # Install dependencies
 npm install
 
-# Create environment variables
-echo "VITE_API_URL=http://localhost:5001" > .env
-echo "VITE_SOCKET_URL=http://localhost:5001" >> .env
-
-# Start the development server
-npm run dev
+# Create environment file
+cp .env.example .env
 ```
 
-### **4. Access the Application**
+#### Frontend Environment Variables
 
-- **Frontend**: http://localhost:5174
-- **Backend API**: http://localhost:5001
-- **Socket.IO**: ws://localhost:5001
+Edit the `.env` file:
 
-## 🎯 Usage Guide
-
-### **For Users:**
-
-1. **Browse Venues**: Visit `/venues` to see all available venues
-2. **Select Venue**: Click "Book Now" on any venue card
-3. **Choose Date**: Use the date picker to select booking date
-4. **Select Time Slots**: Click on available (green) time slots
-5. **Book Venue**: Fill in contact details and confirm booking
-6. **Real-Time Updates**: See live availability changes from other users
-
-### **For Venue Owners:**
-
-1. **Add Venue**: Click "Add Venue" in navigation (requires login)
-2. **Fill Details**: Complete the 4-step venue creation form
-3. **Upload Images**: Add venue photos using Cloudinary integration
-4. **Manage Bookings**: View bookings through the API endpoints
-
-## 🔌 API Endpoints
-
-### **Authentication Routes**
-```
-POST /api/auth/signup          # User registration
-POST /api/auth/login           # User login
-POST /api/auth/logout          # User logout
-POST /api/auth/verify-email    # Email verification
-GET  /api/auth/check-auth      # Check authentication status
-```
-
-### **Venue Routes**
-```
-GET    /api/venues             # Get all venues (with pagination)
-POST   /api/venues             # Create new venue (authenticated)
-GET    /api/venues/:id         # Get venue by ID
-PUT    /api/venues/:id         # Update venue (authenticated)
-DELETE /api/venues/:id         # Delete venue (authenticated)
-```
-
-### **Booking Routes**
-```
-GET  /api/bookings/venue/:venueId/availability  # Get venue availability
-POST /api/bookings/create                       # Create booking (authenticated)
-GET  /api/bookings/my-bookings                  # Get user bookings (authenticated)
-PUT  /api/bookings/:id/cancel                   # Cancel booking (authenticated)
-GET  /api/bookings/venue/:venueId/bookings      # Get venue bookings (authenticated)
-```
-
-## 🔄 Real-Time Events
-
-### **Socket.IO Events**
-
-#### **Client → Server**
-```javascript
-'join_venue'          // Join venue room for updates
-'leave_venue'         // Leave venue room
-'slot_selecting'      // User selecting time slots
-'slot_deselecting'    // User deselecting time slots
-'booking_initiated'   // User starting booking process
-'user_typing'         // User typing in booking form
-```
-
-#### **Server → Client**
-```javascript
-'booking_confirmed'         // New booking created
-'booking_cancelled'         // Booking cancelled
-'slot_availability_updated' // Slot availability changed
-'slot_being_selected'       // Someone selecting slots
-'slot_being_deselected'     // Someone deselecting slots
-'booking_in_progress'       // Someone booking
-'user_notification'         // Personal notifications
-'system_announcement'       // System-wide announcements
-```
-
-## 📊 Database Schema
-
-### **User Model**
-```javascript
-{
-  fullName: String,
-  email: String (unique),
-  password: String (hashed),
-  isVerified: Boolean,
-  verificationToken: String,
-  profilePic: String
-}
-```
-
-### **Venue Model**
-```javascript
-{
-  name: String,
-  description: String,
-  address: String,
-  sports: [String],
-  priceRange: { min: Number, max: Number },
-  photo: String,
-  ownerId: ObjectId
-}
-```
-
-### **Booking Model**
-```javascript
-{
-  venueId: ObjectId,
-  userId: ObjectId,
-  date: Date,
-  startTime: String,      // "09:00"
-  endTime: String,        // "11:00"
-  duration: Number,       // 2 (hours)
-  totalPrice: Number,     // 1000
-  status: String,         // "confirmed", "cancelled", "completed"
-  paymentStatus: String,  // "pending", "paid", "failed"
-  contactPhone: String,
-  notes: String
-}
-```
-
-## 🚦 Environment Variables
-
-### **Backend (.env)**
-```env
-# Database
-MONGO_URI=mongodb://localhost:27017/quickcourt
-
-# Authentication
-JWT_SECRET=your-super-secret-jwt-key
-
-# Cloudinary (Image Storage)
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-
-# Email Service (Gmail)
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-
-# Server
-PORT=5001
-CLIENT_URL=http://localhost:5174
-```
-
-### **Frontend (.env)**
 ```env
 # API Configuration
-VITE_API_URL=http://localhost:5001
+VITE_API_URL=http://localhost:5001/api
+
+# Razorpay Configuration
+VITE_RAZORPAY_KEY_ID=rzp_test_your_key_id
+
+# Socket.IO Configuration
 VITE_SOCKET_URL=http://localhost:5001
 ```
 
-## 🧪 Testing the Real-Time Features
+#### Start Frontend Development Server
 
-1. **Open Multiple Browser Windows**: Open the same venue page in 2+ windows
-2. **Login with Different Users**: Use different accounts in each window
-3. **Select Time Slots**: Watch real-time updates across windows
-4. **Make a Booking**: See instant availability changes
-5. **Check Notifications**: Observe toast notifications for real-time events
-
-## 🔧 Troubleshooting
-
-### **Common Issues:**
-
-1. **Socket Connection Failed**
-   - Check if backend server is running
-   - Verify CORS settings
-   - Ensure authentication token is valid
-
-2. **Booking Creation Failed**
-   - Verify all required fields are filled
-   - Check slot availability
-   - Ensure user is authenticated
-
-3. **Real-Time Updates Not Working**
-   - Check browser console for errors
-   - Verify Socket.IO connection status
-   - Ensure multiple users are in the same venue room
-
-### **Debug Mode:**
-```javascript
-// Enable Socket.IO debugging in browser console
-localStorage.debug = 'socket.io-client:socket';
+```bash
+# Start development server
+npm run dev
 ```
 
-## 🚀 Deployment
+The frontend will start on `http://localhost:5173`
 
-### **Backend Deployment (Heroku/Railway/DigitalOcean)**
-1. Set all environment variables
-2. Ensure MongoDB Atlas connection
-3. Configure Cloudinary for production
-4. Update CORS origins for production domain
+## 📁 Project Structure
 
-### **Frontend Deployment (Vercel/Netlify)**
-1. Update `VITE_API_URL` to production backend URL
-2. Update `VITE_SOCKET_URL` to production socket server
-3. Build the project: `npm run build`
-4. Deploy the `dist` folder
+```
+QuickCourt/
+├── backend/                 # Backend API server
+│   ├── src/
+│   │   ├── controllers/     # Route controllers
+│   │   ├── models/         # Database models
+│   │   ├── routes/         # API routes
+│   │   ├── middleware/     # Custom middleware
+│   │   ├── utils/          # Utility functions
+│   │   ├── lib/            # External libraries config
+│   │   ├── socket.js       # Socket.IO configuration
+│   │   └── index.js        # Server entry point
+│   ├── .env.example        # Environment template
+│   ├── package.json
+│   └── README.md
+│
+├── frontend/               # React frontend application
+│   ├── src/
+│   │   ├── components/     # Reusable components
+│   │   ├── pages/          # Page components
+│   │   ├── store/          # Zustand state management
+│   │   ├── services/       # API services
+│   │   ├── lib/            # Utility libraries
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── assets/         # Static assets
+│   │   └── App.jsx         # Main app component
+│   ├── public/             # Public assets
+│   ├── .env.example        # Environment template
+│   ├── package.json
+│   ├── vite.config.js      # Vite configuration
+│   └── tailwind.config.js  # Tailwind CSS configuration
+│
+├── .gitignore             # Git ignore rules
+└── README.md              # Project documentation
+```
 
-## 📞 Support
+## 🎯 Key Features Implementation
 
-For issues or questions:
-- Check the troubleshooting section
-- Review the code comments
-- Test with multiple browser windows
-- Verify environment variables
+### Real-time Slot Updates
+- Socket.IO integration for live availability updates
+- Real-time booking confirmations across all connected clients
+- Live slot selection indicators
 
-## 🎉 Features Demo
+### Payment Processing
+- Razorpay integration for secure payments
+- Order creation and verification workflow
+- Payment status tracking and booking confirmation
 
-The system includes:
-- ✅ Real-time slot blocking when users select time slots
-- ✅ Live booking confirmations across all connected users
-- ✅ Socket-based authentication for secure real-time features
-- ✅ Optimistic UI updates with rollback on errors
-- ✅ Connection status indicators
-- ✅ Comprehensive error handling and user feedback
+### Sport-specific Booking
+- Filter availability by specific sports
+- Prevent double bookings for same sport and time slot
+- Sport validation against venue offerings
 
----
+### Responsive Design
+- Mobile-first Tailwind CSS implementation
+- Adaptive layouts for different screen sizes
+- Touch-friendly interface elements
 
-**Built with ❤️ using the MERN stack + Socket.IO**
+## 🧪 Testing the Application
+
+### 1. Start Both Servers
+```bash
+# Terminal 1: Backend
+cd backend && npm run dev
+
+# Terminal 2: Frontend
+cd frontend && npm run dev
+```
+
+### 2. Test User Flow
+1. **Registration/Login** - Create account or login
+2. **Browse Venues** - Explore available venues
+3. **Select Sport** - Choose your preferred sport
+4. **Pick Time Slots** - Select available time slots
+5. **Complete Booking** - Fill details and proceed to payment
+6. **Payment Processing** - Complete payment via Razorpay
+7. **Booking Confirmation** - Verify booking in profile
+
+### 3. Test Real-time Features
+- Open multiple browser windows
+- Book a slot in one window
+- Verify it becomes unavailable in other windows immediately
+
+## 🔒 Security Features
+
+- **JWT Authentication** - Secure token-based authentication
+- **Password Hashing** - bcryptjs for secure password storage
+- **Input Validation** - Joi schema validation for all inputs
+- **CORS Protection** - Configured CORS for API security
+- **Payment Security** - Razorpay signature verification
+
+**Happy Coding! 🚀**
