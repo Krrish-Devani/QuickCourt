@@ -1,0 +1,36 @@
+﻿
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"venue":{"priceRange":{"min":
+                    100,"max":110},"amenities":[],
+                    "rating":0,"reviewCount":0,"_i
+                    d":"6899e048c9d4f9a964c30ed6",
+                    "name":"Baburao 
+                    Academy","description":"This 
+                    is best 
+                    place","address":"South Bom...
+RawContent        : HTTP/1.1 200 OK
+                    Vary: Origin
+                    Access-Control-Allow-Credentia
+                    ls: true
+                    Connection: keep-alive
+                    Keep-Alive: timeout=5
+                    Content-Length: 2143
+                    Content-Type: 
+                    application/json; 
+                    charset=utf-8
+                    Date: Tue, 12...
+Forms             : {}
+Headers           : {[Vary, Origin], [Access-Contr
+                    ol-Allow-Credentials, true], 
+                    [Connection, keep-alive], 
+                    [Keep-Alive, timeout=5]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 2143
+
+
+
