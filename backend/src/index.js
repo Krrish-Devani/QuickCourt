@@ -10,6 +10,7 @@ import { initializeSocket } from './socket.js';
 import authRoutes from './routes/auth.route.js';
 import venueRoutes from './routes/venue.route.js';
 import bookingRoutes from './routes/booking.route.js';
+import paymentRoutes from './routes/payment.route.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/venues', venueRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.use((err, req, res, next) => {
     let { statusCode = 500, message = 'Something went wrong' } = err;

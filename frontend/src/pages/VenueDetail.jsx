@@ -7,6 +7,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useBookingStore, formatTime, formatDate } from '../store/useBookingStore';
+import { usePaymentStore } from '../store/usePaymentStore';
+import PaymentModal from '../components/PaymentModal';
 import socketManager from '../lib/socketManager';
 import DatePicker from 'react-datepicker';
 import toast from 'react-hot-toast';
@@ -35,6 +37,7 @@ const VenueDetail = () => {
   const { venueId } = useParams();
   const navigate = useNavigate();
   const { authUser } = useAuthStore();
+  const { resetPaymentState } = usePaymentStore();
   
   const {
     currentVenue,
@@ -55,11 +58,14 @@ const VenueDetail = () => {
     resetBookingState
   } = useBookingStore();
 
-  // Local state for booking form
+  // Local state for booking form and payment
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState(null);
   const [contactPhone, setContactPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [paymentWasSuccessful, setPaymentWasSuccessful] = useState(false);
   
   // Refs for real-time updates
   const typingTimeoutRef = useRef();
@@ -83,6 +89,7 @@ const VenueDetail = () => {
     return () => {
       socketManager.leaveVenue(venueId);
       resetBookingState();
+      resetPaymentState();
     };
   }, [venueId, authUser]);
 
@@ -199,22 +206,100 @@ const VenueDetail = () => {
       // Emit booking initiated event
       socketManager.emitBookingInitiated(venueId, selectedDate, selectedSlots, selectedSport);
 
-      // Create booking
-      await createBooking({
+      console.log('🎯 Creating booking for payment...');
+      
+      // Create booking with pending payment status
+      const response = await createBooking({
         contactPhone: contactPhone.trim(),
         notes: notes.trim()
       });
 
-      // Reset form
-      setContactPhone('');
-      setNotes('');
-      setShowBookingForm(false);
+      console.log('✅ Booking response:', response);
       
-      toast.success('Booking confirmed! You will receive a confirmation shortly.');
+      // Extract booking from response (backend sends it in response.data.data.booking)
+      const booking = response.data?.data?.booking || response.data?.booking || response.booking || response;
+      console.log('📋 Extracted booking for payment:', booking);
+      console.log('🔍 Booking structure debug:', {
+        hasDataData: !!response.data?.data,
+        hasData: !!response.data,
+        hasBooking: !!booking,
+        bookingId: booking?._id,
+        totalPrice: booking?.totalPrice
+      });
+      
+      // Store booking for payment
+      setPendingBooking(booking);
+      
+      // Show payment modal
+      setShowBookingForm(false);
+      setShowPaymentModal(true);
+      
+      // Inform user that payment is required to complete booking
+      toast.success('Booking created! Please complete payment to confirm.', {
+        duration: 3000,
+        icon: '⏳'
+      });
       
     } catch (error) {
-      console.error('Booking failed:', error);
+      console.error('❌ Booking creation failed:', error);
+      toast.error(error.message || 'Failed to create booking');
     }
+  };
+
+  /**
+   * Handle successful payment
+   */
+  const handlePaymentSuccess = (razorpayResponse, verifiedPayment) => {
+    console.log('🎉 Payment successful!', { razorpayResponse, verifiedPayment });
+    
+    // Mark payment as successful before closing modal
+    setPaymentWasSuccessful(true);
+    
+    // Reset form and close modals
+    setContactPhone('');
+    setNotes('');
+    setShowPaymentModal(false);
+    setPendingBooking(null);
+    
+    // Clear selection and reset booking state after successful payment
+    clearSelection();
+    
+    // Refresh availability to show the confirmed booking
+    if (currentVenue && selectedDate && selectedSport) {
+      console.log('🔄 Refreshing availability after successful payment...');
+      getVenueAvailability(currentVenue._id, selectedDate, selectedSport);
+    }
+    
+    // Show success message and navigate
+    toast.success('🎉 Booking confirmed! Payment successful. Redirecting...', {
+      duration: 4000,
+      icon: '✅'
+    });
+    
+    // Navigate to profile or booking confirmation page
+    setTimeout(() => {
+      navigate('/profile');
+    }, 2000);
+  };
+
+  /**
+   * Handle payment modal close
+   */
+  const handlePaymentModalClose = () => {
+    setShowPaymentModal(false);
+    
+    // // Only show error message if payment was not successful
+    // if (!paymentWasSuccessful) {
+    //   toast.error('Payment cancelled. Your booking is pending payment completion.', {
+    //     duration: 4000,
+    //     icon: '⚠️'
+    //   });
+    // }
+    
+    // Reset the payment success flag for next time
+    setPaymentWasSuccessful(false);
+    
+    // Note: Don't clear pendingBooking here as user might want to retry payment
   };
 
   /**
@@ -914,6 +999,14 @@ const VenueDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={handlePaymentModalClose}
+        booking={pendingBooking}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };

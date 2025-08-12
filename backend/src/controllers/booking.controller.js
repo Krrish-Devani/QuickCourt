@@ -6,6 +6,7 @@
 import Booking from '../models/booking.model.js';
 import Venue from '../models/venue.model.js';
 import User from '../models/user.model.js';
+import Payment from '../models/payment.model.js';
 import { emitBookingConfirmed, emitSlotAvailabilityUpdate } from '../socket.js';
 
 /**
@@ -162,9 +163,16 @@ export const createBooking = async (req, res) => {
     }
 
     // Validate booking date (cannot book in the past)
-    const bookingDate = new Date(date);
+    const bookingDate = new Date(date + 'T00:00:00.000Z'); // Use UTC to avoid timezone issues
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    console.log('📅 Date validation:', {
+      requestedDate: date,
+      bookingDate: bookingDate.toISOString(),
+      today: today.toISOString(),
+      isValidDate: bookingDate >= today
+    });
     
     if (bookingDate < today) {
       return res.status(400).json({ 
@@ -172,20 +180,19 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Create booking
+    // Create booking with pending payment status
     const booking = new Booking({
       venueId,
       userId,
       sport,
-      date: bookingDate,
+      date: new Date(date + 'T00:00:00.000Z'), // Store as UTC midnight for consistency
       startTime,
       endTime,
       duration,
       totalPrice,
       contactPhone,
       notes: notes || '',
-      status: 'confirmed',
-      paymentStatus: 'pending'
+      paymentStatus: 'pending' // Set payment status to pending initially
     });
 
     await booking.save();
@@ -193,36 +200,21 @@ export const createBooking = async (req, res) => {
     // Populate booking with user and venue details
     await booking.populate([
       { path: 'userId', select: 'fullName email' },
-      { path: 'venueId', select: 'name address' }
+      { path: 'venueId', select: 'name address sports' }
     ]);
 
-    // Emit real-time update to all users viewing this venue
-    console.log('📡 Emitting booking confirmation to venue room:', venueId);
-    console.log('📡 Booking data being sent:', {
-      venueId,
-      sport,
-      booking: {
-        _id: booking._id,
-        date: booking.date,
-        sport: booking.sport,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
-        userId: booking.userId
-      }
-    });
-    emitBookingConfirmed(venueId, booking);
-
-    // Get updated availability for the date and sport and emit update
-    const updatedSlots = await getAvailableSlotsForDate(venueId, date, sport);
-    console.log('📡 Emitting slot availability update:', updatedSlots.length, 'available slots for date:', date, 'sport:', sport);
-    emitSlotAvailabilityUpdate(venueId, date, updatedSlots, sport);
+    console.log('� Booking created successfully with pending payment:', booking._id);
 
     res.status(201).json({
-      message: 'Booking created successfully',
-      booking,
-      totalPrice,
-      duration,
-      sport
+      success: true,
+      message: 'Booking created successfully. Please complete payment to confirm.',
+      data: {
+        booking,
+        totalPrice,
+        duration,
+        sport,
+        paymentRequired: true
+      }
     });
 
   } catch (error) {
@@ -388,6 +380,68 @@ export const getVenueBookings = async (req, res) => {
   }
 };
 
+/**
+ * Confirm booking after successful payment
+ * PUT /api/bookings/:bookingId/confirm-payment
+ */
+export const confirmBookingPayment = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { paymentId, razorpay_order_id } = req.body;
+    const userId = req.user._id;
+
+    // Find the booking
+    const booking = await Booking.findOne({ 
+      _id: bookingId, 
+      userId,
+      paymentStatus: 'pending' 
+    }).populate([
+      { path: 'userId', select: 'fullName email' },
+      { path: 'venueId', select: 'name address sports' }
+    ]);
+
+    if (!booking) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Booking not found or already confirmed' 
+      });
+    }
+
+    // Update booking with payment information
+    booking.paymentStatus = 'completed';
+    booking.paymentId = paymentId;
+    booking.razorpay_order_id = razorpay_order_id;
+    
+    await booking.save();
+
+    // Emit real-time update to all users viewing this venue
+    console.log('📡 Emitting booking confirmation to venue room:', booking.venueId._id);
+    emitBookingConfirmed(booking.venueId._id, booking);
+
+    // Get updated availability for the date and sport and emit update
+    const updatedSlots = await getAvailableSlotsForDate(
+      booking.venueId._id, 
+      booking.date, 
+      booking.sport
+    );
+    emitSlotAvailabilityUpdate(booking.venueId._id, booking.date, updatedSlots, booking.sport);
+
+    res.status(200).json({
+      success: true,
+      message: 'Booking confirmed successfully',
+      data: booking
+    });
+
+  } catch (error) {
+    console.error('Error confirming booking payment:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error confirming booking payment',
+      error: error.message 
+    });
+  }
+};
+
 // Helper Functions
 
 /**
@@ -445,7 +499,7 @@ function calculateDuration(startTime, endTime) {
 /**
  * Get available slots for a specific date and sport
  */
-async function getAvailableSlotsForDate(venueId, date, sport = null) {
+export async function getAvailableSlotsForDate(venueId, date, sport = null) {
   const timeSlots = generateTimeSlots();
   const bookings = await Booking.getVenueBookingsForDate(venueId, date, sport);
   

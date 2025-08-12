@@ -9,7 +9,8 @@ import {
   createBooking,
   getUserBookings,
   cancelBooking,
-  getVenueBookings
+  getVenueBookings,
+  confirmBookingPayment
 } from '../controllers/booking.controller.js';
 import { checkAuthMiddleware } from '../middleware/checkAuthMiddleware.js';
 import { validateBooking } from '../middleware/Validate.js';
@@ -39,6 +40,10 @@ router.get('/my-bookings', checkAuthMiddleware, getUserBookings);
 // Cancel a booking
 // PUT /api/bookings/:bookingId/cancel
 router.put('/:bookingId/cancel', checkAuthMiddleware, cancelBooking);
+
+// Confirm booking payment
+// PUT /api/bookings/:bookingId/confirm-payment
+router.put('/:bookingId/confirm-payment', checkAuthMiddleware, confirmBookingPayment);
 
 // Get bookings for a specific venue (for venue owners/admins)
 // GET /api/bookings/venue/:venueId/bookings?date=2025-08-11&status=confirmed

@@ -30,8 +30,14 @@ export const useBookingStore = create((set, get) => ({
   getVenueAvailability: async (venueId, date, sport = null) => {
     set({ isLoading: true });
     try {
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = date.toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
       console.log('🔍 Fetching venue availability for:', venueId, dateString, sport ? `sport: ${sport}` : 'all sports');
+      console.log('🗓️ Date conversion debug:', {
+        originalDate: date,
+        localeDateString: dateString,
+        isoString: date.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
       
       let url = `/bookings/venue/${venueId}/availability?date=${dateString}`;
       if (sport) {
@@ -149,7 +155,7 @@ export const useBookingStore = create((set, get) => ({
       const booking = {
         venueId: currentVenue._id,
         sport: selectedSport,
-        date: selectedDate.toISOString().split('T')[0],
+        date: selectedDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format in local timezone
         startTime,
         endTime,
         contactPhone: bookingData.contactPhone,
@@ -157,6 +163,12 @@ export const useBookingStore = create((set, get) => ({
       };
 
       console.log('📅 Creating booking:', booking);
+      console.log('🗓️ Date details:', {
+        selectedDate: selectedDate,
+        formattedDate: selectedDate.toLocaleDateString('en-CA'),
+        isoDate: selectedDate.toISOString(),
+        localDateString: selectedDate.toDateString()
+      });
       console.log('🎯 Selected sport debug:', {
         selectedSport,
         venueId: currentVenue._id,
@@ -165,18 +177,17 @@ export const useBookingStore = create((set, get) => ({
 
       const response = await axiosInstance.post('/bookings/create', booking);
       
-      toast.success(`${selectedSport} booking created successfully!`);
+      // Don't show success message yet - booking is pending payment
+      console.log('📋 Booking created with pending payment status');
       
-      // Clear selection after successful booking
+      // Don't clear selection yet - keep it for payment modal
       set({
-        selectedSlots: [],
-        totalPrice: 0,
         isBooking: false
       });
 
-      // Refresh availability immediately to show the new booking
-      console.log('🔄 Refreshing availability after booking creation...');
-      await get().getVenueAvailability(currentVenue._id, selectedDate, selectedSport);
+      // Don't refresh availability yet - booking is pending payment
+      // Will refresh after successful payment completion
+      console.log('⏳ Booking pending payment - availability will refresh after payment');
 
       return response.data;
     } catch (error) {

@@ -81,18 +81,18 @@ const bookingSchema = new mongoose.Schema({
     min: 0
   },
   
-  // Booking status
-  status: {
-    type: String,
-    enum: ['pending', 'confirmed', 'cancelled', 'completed'],
-    default: 'confirmed'
-  },
-  
   // Payment status
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
+    enum: ['pending', 'completed', 'failed', 'refunded'],
     default: 'pending'
+  },
+  
+  // Booking status
+  status: {
+    type: String,
+    enum: ['active', 'completed', 'cancelled'],
+    default: 'active'
   },
   
   // Additional notes from the user
@@ -105,6 +105,19 @@ const bookingSchema = new mongoose.Schema({
   contactPhone: {
     type: String,
     required: true
+  },
+
+  // Reference to payment record
+  paymentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Payment',
+    default: null
+  },
+
+  // Razorpay order ID for payment tracking
+  razorpay_order_id: {
+    type: String,
+    default: null
   }
 }, { 
   timestamps: true // Automatically adds createdAt and updatedAt
@@ -119,10 +132,23 @@ bookingSchema.index({ userId: 1, date: 1 });
 
 // Static method to check if a time slot is available for a specific sport
 bookingSchema.statics.isSlotAvailable = async function(venueId, date, sport, startTime, endTime) {
+  // Normalize the date to handle timezone issues
+  const queryDate = new Date(date);
+  queryDate.setHours(0, 0, 0, 0);
+  
+  // Create date range for the entire day to handle timezone variations
+  const startOfDay = new Date(queryDate);
+  const endOfDay = new Date(queryDate);
+  endOfDay.setHours(23, 59, 59, 999);
+  
   const filter = {
     venueId,
-    date: new Date(date),
+    date: {
+      $gte: startOfDay,
+      $lte: endOfDay
+    },
     status: { $ne: 'cancelled' },
+    paymentStatus: 'completed', // Only check against bookings with completed payment
     $or: [
       // New booking starts during existing booking
       { startTime: { $lte: startTime }, endTime: { $gt: startTime } },
@@ -145,10 +171,21 @@ bookingSchema.statics.isSlotAvailable = async function(venueId, date, sport, sta
 
 // Static method to get all bookings for a venue on a specific date for a specific sport
 bookingSchema.statics.getVenueBookingsForDate = async function(venueId, date, sport = null) {
+  // Parse the date string consistently and create UTC date range
+  const dateString = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+  
+  // Create start and end of day in UTC
+  const startOfDay = new Date(dateString + 'T00:00:00.000Z');
+  const endOfDay = new Date(dateString + 'T23:59:59.999Z');
+  
   const filter = {
     venueId,
-    date: new Date(date),
-    status: { $ne: 'cancelled' }
+    date: {
+      $gte: startOfDay,
+      $lte: endOfDay
+    },
+    status: { $ne: 'cancelled' },
+    paymentStatus: 'completed' // Only include bookings with completed payment
   };
   
   if (sport) {
@@ -156,9 +193,35 @@ bookingSchema.statics.getVenueBookingsForDate = async function(venueId, date, sp
     filter.sport = { $regex: new RegExp(`^${sport}$`, 'i') };
   }
   
-  return await this.find(filter)
+  console.log('🔍 Booking query with UTC date range:', {
+    venueId,
+    dateInput: date,
+    dateString,
+    queryDateRange: {
+      start: startOfDay.toISOString(),
+      end: endOfDay.toISOString()
+    },
+    sport: sport || 'all'
+  });
+  
+  const bookings = await this.find(filter)
     .populate('userId', 'fullName email')
     .sort({ startTime: 1 });
+    
+  console.log('📋 Found bookings:', bookings.length);
+  if (bookings.length > 0) {
+    console.log('📝 Booking details:', bookings.map(b => ({
+      id: b._id,
+      sport: b.sport,
+      date: b.date,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      paymentStatus: b.paymentStatus,
+      status: b.status
+    })));
+  }
+  
+  return bookings;
 };
 
 // Instance method to calculate duration
